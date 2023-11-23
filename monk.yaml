@@ -1,0 +1,82 @@
+namespace: react-express-mongodb
+
+mongo:
+  defines: runnable
+  inherits: mongodb/mongodb
+  metadata:
+    name: mongo
+    description: MongoDB database service
+    icon: >-
+      https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRA8VbFgxH-i78AZmNqD93mVRkTRd30POqLeCmg9T05ug&s
+  variables:
+    mongo-image:
+      type: string
+      value: latest
+      description: ''
+    mongo-init-database:
+      type: string
+      value: mongo
+      description: ''
+    mongo-init-password:
+      type: string
+      value: password
+      description: ''
+    mongo-init-username:
+      type: string
+      value: mongo
+      description: ''
+    mongodb-image:
+      type: string
+      value: latest
+      description: ''
+
+backend:
+  defines: runnable
+  metadata:
+    name: backend
+    description: Node.js application providing the backend API
+    icon: https://emojiapi.dev/api/v1/robot.svg
+  containers:
+    backend:
+      image: env-2534.registry.local/backend:main-791ff37
+      build: .
+      dockerfile: backend/Dockerfile
+  services:
+    nodejs-application-port:
+      description: Port exposed by the Node.js application for incoming HTTP requests
+      container: backend
+      port: $port
+      host-port: $port
+      publish: true
+      protocol: tcp
+  connections:
+    database-connection:
+      target: react-express-mongodb/mongo
+      service: mongodb
+  variables:
+    node-env:
+      env: NODE_ENV
+      type: string
+      value: development
+      description: The environment in which the Node.js application is running
+    port:
+      env: PORT
+      type: int
+      value: 3000
+      description: Port on which the Node.js application will run
+    mongodb-uri:
+      env: MONGODB_URI
+      type: string
+      value: <- connection-port("database-connection")
+      description: MongoDB connection URI
+    node-port:
+      env: NODE_PORT
+      type: int
+      value: 3000
+      description: Port that is exposed by the Docker container
+
+stack:
+  defines: group
+  members:
+    - react-express-mongodb/mongo
+    - react-express-mongodb/backend
